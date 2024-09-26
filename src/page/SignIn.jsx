@@ -1,8 +1,11 @@
 import { useState, useRef } from 'react';
 import { BiUserCircle, BiShow, BiHide } from 'react-icons/bi'; // Icons for user and eye
 import axios from 'axios'; // Axios for making API requests
-
+import { toast } from 'react-toastify'; // Import toast and ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS for toast notifications
+import { Link, useNavigate } from 'react-router-dom'
 const SignIn = () => {
+    const navigate = useNavigate()
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -11,6 +14,7 @@ const SignIn = () => {
     });
 
     const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
+    const [loading, setLoading] = useState(false); // Loading state
     const fileInputRef = useRef(null);
 
     // Handle input changes
@@ -30,21 +34,20 @@ const SignIn = () => {
     // Handle form submission with axios
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const formDataToSubmit = new FormData(); // Create FormData for file uploads
-        formDataToSubmit.append('username', formData.username);
-        formDataToSubmit.append('email', formData.email);
-        formDataToSubmit.append('password', formData.password);
-        if (formData.image) {
-            formDataToSubmit.append('image', formData.image);
-        }
+        setLoading(true); // Set loading state to true
 
         try {
-            const response = await axios.post('https://yourapi.com/signin', formDataToSubmit, {
-                headers: { 'Content-Type': 'multipart/form-data' },
+            const response = await axios.post('http://localhost:5000/api/user/register', formData, {
+                withCredentials: true
             });
+            navigate('/signin')
+            toast.success('Registration successful!'); // Show success toast
             console.log('Response:', response.data); // Handle success
         } catch (error) {
-            console.error('Error:', error); // Handle error
+            console.error('Error:', error);
+            toast.error(error.response?.data?.message || 'Registration failed.'); // Show error toast
+        } finally {
+            setLoading(false); // Reset loading state
         }
     };
 
@@ -134,18 +137,20 @@ const SignIn = () => {
                         </div>
                     </div>
 
-
                     {/* Submit Button */}
                     <div>
                         <button
                             type="submit"
-                            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-600'} text-white py-2 rounded-lg hover:bg-blue-700 transition-colors`}
+                            disabled={loading} // Disable button while loading
                         >
-                            Sign In
+                            {loading ? 'Loading...' : 'Sign In'}
                         </button>
                     </div>
                 </form>
+                <p>Already have an account? <Link to="/signup" className="text-blue-600 hover:text-blue-800 transition-colors">Sign Up</Link></p>
             </div>
+
         </div>
     );
 };
